@@ -1,6 +1,9 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 
+
+require('console.table'); //makes tables look nice in console
+
 //create connection
 var connection = mysql.createConnection({
   host: "localhost",
@@ -11,7 +14,42 @@ var connection = mysql.createConnection({
 
   // Your password
   password: "admin",
-  database: "top_songsDB"
+  database: "bamazon_db"
 });
 
 //connect to mysql
+connection.connect(function(err){
+  if (err) throw err;
+  // run the start function after the connection is made to prompt the user
+  start();
+});
+
+//function to propmpt user
+function start(){
+  connection.query(
+    "SELECT * FROM bamazon_db.products;", function(err, result){
+      if (err) throw err;
+      //onece you have items show them in the console
+      console.table(result);
+
+      inquirer.prompt([
+        {
+          name: "id",
+          type: "input",
+          message: "Enter the ID of the item you want to buy."
+        }
+      ]).then(function(answer){
+        //loop over ids
+        for(var i=0; i< result.length; i++){
+          if( ){
+
+          }else{
+            console.log("The ID: " + answer + " does not exit");
+          }
+        }
+      });
+    }
+  );
+}
+
+
