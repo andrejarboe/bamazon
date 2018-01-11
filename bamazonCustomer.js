@@ -18,16 +18,16 @@ var connection = mysql.createConnection({
 });
 
 //connect to mysql
-connection.connect(function(err){
+connection.connect(function (err) {
   if (err) throw err;
   // run the start function after the connection is made to prompt the user
   start();
 });
 
 //function to propmpt user
-function start(){
+function start() {
   connection.query(
-    "SELECT * FROM bamazon_db.products;", function(err, result){
+    "SELECT * FROM bamazon_db.products;", function (err, result) {
       if (err) throw err;
       //onece you have items show them in the console
       console.table(result);
@@ -38,14 +38,15 @@ function start(){
           type: "input",
           message: "Enter the ID of the item you want to buy."
         }
-      ]).then(function(answer){
+      ]).then(function (answer) {
         //loop over ids
-        for(var i=0; i< result.length; i++){
-          if( ){
-
-          }else{
-            console.log("The ID: " + answer + " does not exit");
-          }
+        console.log("answer: " + answer.id);
+        console.log(result[0].id);
+        
+        for (var i = 0; i < result.length; i++) {
+          if (answer.id == result[i].id) {
+            console.log("id: " + answer.id);
+          } 
         }
       });
     }
