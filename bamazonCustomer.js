@@ -4,6 +4,9 @@ var inquirer = require("inquirer");
 
 require('console.table'); //makes tables look nice in console
 
+//global vars
+var quantity;
+
 //create connection
 var connection = mysql.createConnection({
   host: "localhost",
@@ -39,115 +42,77 @@ function start() {
           message: "Enter the ID of the item you want to buy."
         }
       ]).then(function (answer) {
+        if (err) throw err;
         var product = result[answer.id - 1].product_name;
         var id = answer.id;
-        // howManyUnits(product, id);
-        connection.query(
-          "SELECT * FROM bamazon_db.products WHERE ?",
-          {
-            id: id,
-
-          }, 
-          function (err, res) {
-            if (err) throw err;
-            console.log("id is: " + id);
-            console.log("the res is: " + res);
-
-            if (answer.units > res[0]) {
-              console.log("Insufficient quantity!");
-              start();
-            } else {
-              //order item
-              console.log("order item, units: " + answer.units + " quanity: " + res);
-              // orderItems(id, answer.units, res.stock_quantity);
-            }
-          });
+        howManyUnits(product, id);
       });
     }
   );
 }
 
 function howManyUnits(product, id) {
-  inquirer.prompt([
+  var price;
+  
+  connection.query(
+    "SELECT stock_quantity, price FROM bamazon_db.products WHERE ?",
     {
-      name: "units",
-      type: "input",
-      message: "How many units of " + product + " would you like to buy?"
-    }
-  ]).then(function (answer) {
+      id: id
+    }, function (err, result) {
+      if (err) throw err;
 
-    connection.query(
-      "SELECT stock_quantity FROM bamazon_db.products WHERE ?",
-      {
-        id: id,
+      quantity = result[0].stock_quantity;
+      price = result[0].price;
 
-      }
-      , function (err, res) {
-        if (err) throw err;
-        console.log("id is: " + id);
-        console.log("the res is: " + res);
+      inquirer.prompt([
+        {
+          name: "units",
+          type: "input",
+          message: "How many units of " + product + " would you like to buy?"
+        }
+      ]).then(function (answer) {
 
-        if (answer.units > res[0]) {
+        var units = answer.units;
+
+        if (units > quantity) {
           console.log("Insufficient quantity!");
           start();
         } else {
           //order item
-          console.log("order item, units: " + answer.units + " quanity: " + res);
-          // orderItems(id, answer.units, res.stock_quantity);
+          var item = id;
+
+          orderItems(item, quantity, price);
+
         }
+
       });
-  });
-}
-
-function orderItems(id, units, quanity) {
-  var total = quanity - units;
-
-
-  connection.query(
-    "UPDATE `bamazon_db`.`products` SET ? WHERE ?",
-    [
-      {
-        stock_quantity: total
-      },
-      {
-        id: id
-      }
-    ],
-    function (err) {
-      if (err) throw err;
-      totatCost(id, units);
     }
   );
-
-
-}
-
-function totalCost(id, units) {
-  connection.query(
-    "SELECT price FROM bamazon_db.products WHERE ?",
-    [
-      {
-        id: id
-      }
-    ]
-  ),
-    function (err, res) {
-      if (err) throw err;
-
-      var cost = units * res.price;
-
-      console.log("Your total cost is: $" + cost);
-    };
-
-}
-
-function showTable() {
-  connection.querry(
-    "SELECT * FROM bamazon_db.products;", function (err, result) {
-      if (err) throw err;
-      //onece you have items show them in the console
-      console.table(result);
-    });
 }
 
 
+function orderItems(item, units, quantity) {
+  var total = quantity - units;
+  var cost = units * items;
+
+  console.log("cost = "+cost);
+  // connection.query(
+  //   "UPDATE products SET ? WHERE ?",
+  //   [
+  //     {
+  //       stock_quantity: total,
+
+  //     },
+  //     {
+  //       id: item
+  //     }
+  //   ], function (err) {
+  //     if (err) throw err;
+  //     console.log("cost::::::::::::::"+cost);
+  //   }
+  // );
+}
+
+// function totalCost() {
+
+// };
