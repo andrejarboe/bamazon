@@ -39,18 +39,115 @@ function start() {
           message: "Enter the ID of the item you want to buy."
         }
       ]).then(function (answer) {
-        //loop over ids
-        console.log("answer: " + answer.id);
-        console.log(result[0].id);
-        
-        for (var i = 0; i < result.length; i++) {
-          if (answer.id == result[i].id) {
-            console.log("id: " + answer.id);
-          } 
-        }
+        var product = result[answer.id - 1].product_name;
+        var id = answer.id;
+        // howManyUnits(product, id);
+        connection.query(
+          "SELECT * FROM bamazon_db.products WHERE ?",
+          {
+            id: id,
+
+          }, 
+          function (err, res) {
+            if (err) throw err;
+            console.log("id is: " + id);
+            console.log("the res is: " + res);
+
+            if (answer.units > res[0]) {
+              console.log("Insufficient quantity!");
+              start();
+            } else {
+              //order item
+              console.log("order item, units: " + answer.units + " quanity: " + res);
+              // orderItems(id, answer.units, res.stock_quantity);
+            }
+          });
       });
     }
   );
+}
+
+function howManyUnits(product, id) {
+  inquirer.prompt([
+    {
+      name: "units",
+      type: "input",
+      message: "How many units of " + product + " would you like to buy?"
+    }
+  ]).then(function (answer) {
+
+    connection.query(
+      "SELECT stock_quantity FROM bamazon_db.products WHERE ?",
+      {
+        id: id,
+
+      }
+      , function (err, res) {
+        if (err) throw err;
+        console.log("id is: " + id);
+        console.log("the res is: " + res);
+
+        if (answer.units > res[0]) {
+          console.log("Insufficient quantity!");
+          start();
+        } else {
+          //order item
+          console.log("order item, units: " + answer.units + " quanity: " + res);
+          // orderItems(id, answer.units, res.stock_quantity);
+        }
+      });
+  });
+}
+
+function orderItems(id, units, quanity) {
+  var total = quanity - units;
+
+
+  connection.query(
+    "UPDATE `bamazon_db`.`products` SET ? WHERE ?",
+    [
+      {
+        stock_quantity: total
+      },
+      {
+        id: id
+      }
+    ],
+    function (err) {
+      if (err) throw err;
+      totatCost(id, units);
+    }
+  );
+
+
+}
+
+function totalCost(id, units) {
+  connection.query(
+    "SELECT price FROM bamazon_db.products WHERE ?",
+    [
+      {
+        id: id
+      }
+    ]
+  ),
+    function (err, res) {
+      if (err) throw err;
+
+      var cost = units * res.price;
+
+      console.log("Your total cost is: $" + cost);
+    };
+
+}
+
+function showTable() {
+  connection.querry(
+    "SELECT * FROM bamazon_db.products;", function (err, result) {
+      if (err) throw err;
+      //onece you have items show them in the console
+      console.table(result);
+    });
 }
 
 
